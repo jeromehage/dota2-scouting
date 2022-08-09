@@ -1,0 +1,18 @@
+https://github.com/jeromehage/dota2-scouting
+
+Automated script to do scouting for you. Input: player IDs, Output: hero 'value'
+
+Takes into consideration:
+- Multiple accounts
+- Winrate, number of games
+- Hero winrate on bracket
+- Role/hero/lane flexibility 
+- Meta
+
+How to run it:
+- Download Python from https://www.python.org/ and install.
+Make sure the 'add pip to PATH' option is selected. Restart your PC.
+- Open cmd, type: pip install pandas requests
+- Download the script from github by clicking the green button Code > Download Zip
+- Edit the top section of the script 'auto_scout.py' with info on your opponent
+- Run the script, from the editor by clicking F5, or by double clicking auto_scout.py
