@@ -17,6 +17,10 @@ mmr = [950, 3540, 3420, 3770, 470]
 # match history search parameters
 params = {'lobby_type': 7, 'date': 365} # ranked, last year
 
+# see https://docs.opendota.com/#tag/players%2Fpaths%2F~1players~1%7Baccount_id%7D~1heroes%2Fget
+# omit lobby_type to include all games
+# add 'significant': 0 to include turbo games
+
 # adjust points for pro meta (pick/ban)
 meta = True
 
@@ -50,7 +54,7 @@ weightsf = {k: {i + 1: 0.2 * flex + w * (1 - flex) for i, w in enumerate(v)}
             for k, v in weights.items()}
 
 # mmr to medal
-mmrm = [0, 620, 1390, 2160, 2930, 3700, 4470, 5420]
+mmrm = [0, 770, 1540, 2310, 3080, 3850, 4620, 5630]
 medal = {k + 1: v for k, v in enumerate(np.searchsorted(mmrm, mmr))}
 
 # hero roles stats from stratz
