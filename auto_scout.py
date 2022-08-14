@@ -11,9 +11,6 @@ team = {1: [99374795],
         4: [30428142],
         5: [1224117898]}
 
-# mmr for each player (1 - 5)
-mmr = [950, 3540, 3420, 3770, 470]
-
 # match history search parameters
 params = {'lobby_type': 7, 'date': 365} # ranked, last year
 
@@ -43,6 +40,12 @@ def get_player_heroes(account_id, **parameters):
     data = requests.get(url.format(account_id, params)).json()
     return data
 
+# get player medal from profile
+def get_player_medal(account_id):
+    url = 'https://api.opendota.com/api/players/{}'
+    data = requests.get(url.format(account_id, params)).json()
+    return data['rank_tier'] // 10
+
 # default flexibility
 weights = {1: [0.85, 0.10, 0.05, 0.00, 0.00],
            2: [0.20, 0.60, 0.20, 0.00, 0.00],
@@ -53,9 +56,15 @@ weights = {1: [0.85, 0.10, 0.05, 0.00, 0.00],
 weightsf = {k: {i + 1: 0.2 * flex + w * (1 - flex) for i, w in enumerate(v)}
             for k, v in weights.items()}
 
-# mmr to medal
-mmrm = [0, 770, 1540, 2310, 3080, 3850, 4620, 5630]
-medal = {k + 1: v for k, v in enumerate(np.searchsorted(mmrm, mmr))}
+# player medals
+medal = {}
+for k, accs in team.items():
+    m = []
+    for a in accs:
+        m += [get_player_medal(a)]
+        # delay for opendota APIs
+        time.sleep(2)
+    medal[k] = max(m)
 
 # hero roles stats from stratz
 stats = pd.read_csv('hero_stats2.csv', sep = ';', index_col = 0)
@@ -110,7 +119,7 @@ for role, account_ids in team.items():
         # player scout sheets
         output = m[['localized_name', 'games', 'win', 'last_played_days', 'value', 'points']].copy()
         output.rename(columns = {'localized_name': 'hero'}, inplace = True)
-        output.to_csv('pos{}.csv'.format(role), sep = ';')
+        #output.to_csv('pos{}.csv'.format(role), sep = ';')
         outputs += [output]
 
 # overall scouting report
