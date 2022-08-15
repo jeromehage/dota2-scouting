@@ -114,7 +114,7 @@ for role, account_ids in team.items():
         # formating
         m['last_played_days'] = ((time.time() - m['last_played']) / (24 * 3600)).astype(int)
         m['value'] = m['value'].astype(int)
-        m['points'] = m['points'].astype(int)
+        m['points'] = m['points'].fillna(0).astype(int)
 
         # player scout sheets
         output = m[['localized_name', 'games', 'win', 'last_played_days', 'value', 'points']].copy()
