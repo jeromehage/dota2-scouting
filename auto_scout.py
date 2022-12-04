@@ -75,7 +75,7 @@ for role, account_ids in team.items():
     if account_ids:
         d = []
         for a in account_ids:
-            d += [get_player_heroes(a, export = [], **params)]
+            d += [get_player_heroes(a, **params)]
             # delay for opendota APIs
             time.sleep(2)
 
