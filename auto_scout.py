@@ -6,7 +6,7 @@ flex = 0.25
 
 # accounts for each player
 team = {1: [99374795],
-        2: [105128443, 1042021698],
+        2: [1042021698, 105128443],
         3: [109489842],
         4: [30428142],
         5: [1224117898]}
@@ -44,7 +44,7 @@ def get_player_heroes(account_id, **parameters):
 def get_player_medal(account_id):
     url = 'https://api.opendota.com/api/players/{}'
     data = requests.get(url.format(account_id, params)).json()
-    return data['rank_tier'] // 10
+    return data['rank_tier'] // 10, data['profile']['personaname']
 
 # default flexibility
 weights = {1: [0.85, 0.10, 0.05, 0.00, 0.00],
@@ -56,12 +56,17 @@ weights = {1: [0.85, 0.10, 0.05, 0.00, 0.00],
 weightsf = {k: {i + 1: 0.2 * flex + w * (1 - flex) for i, w in enumerate(v)}
             for k, v in weights.items()}
 
+# player names
+names = {i: 'pos_{}'.format(i) for i in team}
+
 # player medals
 medal = {}
 for k, accs in team.items():
     m = []
     for a in accs:
-        m += [get_player_medal(a)]
+        rank_tier, name = get_player_medal(a)
+        m += [rank_tier]
+        names[k] = name
         # delay for opendota APIs
         time.sleep(2)
     medal[k] = max(m)
@@ -125,6 +130,6 @@ for role, account_ids in team.items():
 # overall scouting report
 report = pd.DataFrame()
 for i, o in enumerate(outputs):
-    report['{}_heroes'.format(i + 1)] = o['hero']
+    report[names[i + 1]] = o['hero']
     report['{}_points'.format(i + 1)] = o['points']
-    report.to_csv('scouting.csv'.format(role), sep = ';')
+report.to_csv('scouting.csv', sep = ';')
