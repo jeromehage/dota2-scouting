@@ -5,11 +5,11 @@
 flex = 0.25
 
 # accounts for each player
-team = {1: [99374795],
-        2: [1042021698, 105128443],
-        3: [109489842],
-        4: [30428142],
-        5: [1224117898]}
+team = {1: [1102469941],
+        2: [95617179],
+        3: [167618363],
+        4: [26793089],
+        5: [99374795]}
 
 # match history search parameters
 params = {'lobby_type': 7, 'date': 365} # ranked, last year
@@ -47,7 +47,7 @@ def get_player_medal(account_id):
     return data['rank_tier'] // 10, data['profile']['personaname']
 
 # default flexibility
-weights = {1: [0.85, 0.10, 0.05, 0.00, 0.00],
+weights = {1: [0.85, 0.05, 0.10, 0.00, 0.00],
            2: [0.20, 0.60, 0.20, 0.00, 0.00],
            3: [0.10, 0.10, 0.70, 0.10, 0.00],
            4: [0.00, 0.10, 0.00, 0.50, 0.40],
@@ -106,9 +106,17 @@ for role, account_ids in team.items():
         else:
             m['value'] = m['value'] * 1000
 
-        # points: player games and winrate
-        m['pts'] = m['value'] * m['win'] * m['win'] / m['games']
+        # points:
+        # adjust with number of player games
+        m['pts'] = 10 + m['value'] * (5 + m['games'])
+        # percentage of games on each hero
+        m['gr'] = 100 * m['games'] / m['games'].sum()
+        m['pts'] *= m['gr'] / m['gr'].mean()
+        # winrate
+        m['wr'] = m['win'] / m['games']
+        m['pts'] *= 1 + 0.6 * np.tanh((m['wr'] - 0.5) * 10)
         m.sort_values('pts', ascending = False, inplace = True)
+        #print(m[['localized_name', 'value', 'games', 'gr', 'wr', 'pts']])
 
         # drop less important heroes
         m = m.reset_index().fillna(0)
