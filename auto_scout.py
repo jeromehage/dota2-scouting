@@ -2,14 +2,14 @@
 
 # team flexibility [0.0 - 1.0]
 # how comfortable is a team with switching roles, lanes, or playing heroes offrole
-flex = 0.25
+flex = 0.10
 
 # accounts for each player
-team = {1: [1102469941],
-        2: [95617179],
-        3: [167618363],
-        4: [26793089],
-        5: [99374795]}
+team = {1: [120430219],
+        2: [127714243],
+        3: [170319481],
+        4: [159179884],
+        5: [64711066]}
 
 # match history search parameters
 params = {'lobby_type': 7, 'date': 365} # ranked, last year
@@ -74,15 +74,29 @@ for k, accs in team.items():
 # hero roles stats from stratz
 stats = pd.read_csv('hero_stats2.csv', sep = ';', index_col = 0)
 
+# also get older data
+weight = 0.25
+params2 = params.copy()
+params2['date'] *= 3
+wcols = ['games', 'win', 'with_games', 'with_win', 'against_games', 'against_win']
+
 ## main
 outputs = []
 for role, account_ids in team.items():
     if account_ids:
         d = []
         for a in account_ids:
-            d += [get_player_heroes(a, **params)]
+            df = pd.DataFrame(get_player_heroes(a, **params))
             # delay for opendota APIs
-            time.sleep(2)
+            time.sleep(2.1)
+
+            # also get older data
+            df2 = pd.DataFrame(get_player_heroes(a, **params2))
+            time.sleep(2.2)
+
+            # combine
+            df[wcols] = df[wcols] + weight * df2[wcols]
+            d += [df]
 
         # combine accounts
         d = [pd.DataFrame(a) for a in d]
