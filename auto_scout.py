@@ -5,22 +5,25 @@
 flex = 0.10
 
 # accounts for each player
-team = {1: [120430219],
-        2: [127714243],
-        3: [170319481],
-        4: [159179884],
-        5: [64711066]}
+team = {1: [126607959],
+        2: [312864204, 109351526, 133498685],
+        3: [167618363],
+        4: [71904413],
+        5: [99374795]}
 
 # match history search parameters
 params = {'lobby_type': 7, 'date': 365} # ranked, last year
+params2 = {'date': 5 * 365} # all games, last 5 years
 
 # see https://docs.opendota.com/#tag/players%2Fpaths%2F~1players~1%7Baccount_id%7D~1heroes%2Fget
 # omit lobby_type to include all games
 # add 'significant': 0 to include turbo games
 
 # adjust points for pro meta (pick/ban)
-meta = True
+meta = False
 
+# add extra points for recently played heroes
+recent_bonus = True
 
 
 
@@ -41,10 +44,10 @@ def get_player_heroes(account_id, **parameters):
     return data
 
 # get player medal from profile
-def get_player_medal(account_id):
+def get_player_data(account_id):
     url = 'https://api.opendota.com/api/players/{}'
     data = requests.get(url.format(account_id, params)).json()
-    return data['rank_tier'] // 10, data['profile']['personaname']
+    return data
 
 # default flexibility
 weights = {1: [0.85, 0.05, 0.10, 0.00, 0.00],
@@ -64,7 +67,13 @@ medal = {}
 for k, accs in team.items():
     m = []
     for a in accs:
-        rank_tier, name = get_player_medal(a)
+        pdata = get_player_data(a)
+        name = pdata['profile']['personaname']
+        if 'rank_tier' in pdata and pdata['rank_tier'] is not None:
+            rank_tier = pdata['rank_tier'] // 10
+        else:
+            # you're at least herald
+            rank_tier = 1
         m += [rank_tier]
         names[k] = name
         # delay for opendota APIs
@@ -76,8 +85,6 @@ stats = pd.read_csv('hero_stats2.csv', sep = ';', index_col = 0)
 
 # also get older data
 weight = 0.25
-params2 = params.copy()
-params2['date'] *= 3
 wcols = ['games', 'win', 'with_games', 'with_win', 'against_games', 'against_win']
 
 ## main
@@ -86,17 +93,17 @@ for role, account_ids in team.items():
     if account_ids:
         d = []
         for a in account_ids:
-            df = pd.DataFrame(get_player_heroes(a, **params))
+            df1 = pd.DataFrame(get_player_heroes(a, **params))
             # delay for opendota APIs
             time.sleep(2.1)
 
             # also get older data
             df2 = pd.DataFrame(get_player_heroes(a, **params2))
+            df2[wcols] = weight * df2[wcols]
             time.sleep(2.2)
 
             # combine
-            df[wcols] = df[wcols] + weight * df2[wcols]
-            d += [df]
+            d += [df1, df2]
 
         # combine accounts
         d = [pd.DataFrame(a) for a in d]
@@ -129,6 +136,13 @@ for role, account_ids in team.items():
         # winrate
         m['wr'] = m['win'] / m['games']
         m['pts'] *= 1 + 0.6 * np.tanh((m['wr'] - 0.5) * 10)
+        # bonus if they've played the hero in the last 30 days
+        m['last_played_days'] = ((time.time() - m['last_played']) / (24 * 3600)).astype(int)
+        pts_bonus = m['pts'].quantile(0.90) * 0.20
+        if recent_bonus:
+            recent = np.maximum(30 - m['last_played_days'], np.array(0)) / 30        
+            m['pts'] += pts_bonus * recent
+
         m.sort_values('pts', ascending = False, inplace = True)
         #print(m[['localized_name', 'value', 'games', 'gr', 'wr', 'pts']])
 
@@ -139,7 +153,6 @@ for role, account_ids in team.items():
         m['points'] = (1000 * m['pts'] / sum(m['pts']))
 
         # formating
-        m['last_played_days'] = ((time.time() - m['last_played']) / (24 * 3600)).astype(int)
         m['value'] = m['value'].astype(int)
         m['points'] = m['points'].fillna(0).astype(int)
 
