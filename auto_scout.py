@@ -2,14 +2,16 @@
 
 # team flexibility [0.0 - 1.0]
 # how comfortable is a team with switching roles, lanes, or playing heroes offrole
-flex = 0.10
+flex = 0.0
 
 # accounts for each player
-team = {1: [126607959],
-        2: [312864204, 109351526, 133498685],
-        3: [167618363],
-        4: [71904413],
-        5: [99374795]}
+team = {
+    1: [1077021946],
+    2: [224257494],
+    3: [153031584],
+    4: [968487815, 134600696],
+    5: [143642783],
+}
 
 # match history search parameters
 params = {'lobby_type': 7, 'date': 365} # ranked, last year
@@ -40,20 +42,26 @@ def get_player_heroes(account_id, **parameters):
     if parameters:
         params = '?' + '&'.join('{}={}'.format(k, v) for k, v in parameters.items())
     url = 'https://api.opendota.com/api/players/{}/heroes{}'
-    data = requests.get(url.format(account_id, params)).json()
+    req = url.format(account_id, params)
+    print(req)
+    r = requests.get(req)
+    data = r.json()
     return data
 
 # get player medal from profile
 def get_player_data(account_id):
     url = 'https://api.opendota.com/api/players/{}'
-    data = requests.get(url.format(account_id, params)).json()
+    req = url.format(account_id)
+    print(req)
+    r = requests.get(req)
+    data = r.json()
     return data
 
 # default flexibility
-weights = {1: [0.85, 0.05, 0.10, 0.00, 0.00],
-           2: [0.20, 0.60, 0.20, 0.00, 0.00],
-           3: [0.10, 0.10, 0.70, 0.10, 0.00],
-           4: [0.00, 0.10, 0.00, 0.50, 0.40],
+weights = {1: [0.90, 0.05, 0.05, 0.00, 0.00],
+           2: [0.05, 0.85, 0.05, 0.05, 0.00],
+           3: [0.05, 0.05, 0.85, 0.05, 0.00],
+           4: [0.00, 0.05, 0.00, 0.55, 0.40],
            5: [0.00, 0.00, 0.00, 0.40, 0.60]}
 
 weightsf = {k: {i + 1: 0.2 * flex + w * (1 - flex) for i, w in enumerate(v)}
