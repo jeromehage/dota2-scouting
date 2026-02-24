@@ -115,8 +115,8 @@ for role, account_ids in team.items():
 
         # combine accounts
         d = [pd.DataFrame(a) for a in d]
-        g1 = pd.concat(d).groupby('hero_id')['last_played'].apply(max)
-        g2 = pd.concat(d).groupby('hero_id')[d[0].columns[2:]].apply(sum)
+        g1 = pd.concat(d).groupby('hero_id')['last_played'].max()
+        g2 = pd.concat(d).groupby('hero_id')[d[0].columns[2:]].sum()
         df = pd.merge(g1, g2, on = 'hero_id').sort_values('games', ascending = False).reset_index()
 
         # add stats columns
